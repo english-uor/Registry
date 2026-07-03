@@ -314,11 +314,17 @@
      * Communicates securely via Fetch POST with the text/plain payload workaround 
      * to prevent CORS preflight blockages by Google Apps Script.
      */
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmb3lkemZhdXlrcWlnYnhlcXR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxODkzMDAsImV4cCI6MjA5Nzc2NTMwMH0.42K3M5ZodS_xFrHfHa7Hwi-91pre3FtwWxMm944m4vY'; // Supabase → Settings → API → anon public
+
     async function callBackend(action, parameters = {}) {
       try {
         const response = await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + SUPABASE_ANON,
+            'apikey': SUPABASE_ANON
+          },
           body: JSON.stringify({ action, parameters })
         });
         const result = await response.json();
