@@ -307,7 +307,28 @@
     // GITHUB PAGES CONFIGURATION
     // ==========================================
     // REPLACE THIS URL WITH YOUR DEPLOYED APPS SCRIPT WEB APP URL
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzVy26JaNcVda1_8QJSzW4z8yauMmGVBIwOD2cYgBvjoLxxfWZO1SQ81a4oko1kFYs/exec';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtd3lmb2V5ZnhhZW1kc3RudnllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNzI0MjEsImV4cCI6MjA5ODY0ODQyMX0.H5E4sbqnAL-ho8vxyBx3Q4nQAZ9d-VWZs2t9cacKoX0';
+const GAS_WEB_APP_URL = 'https://pmwyfoeyfxaemdstnvye.supabase.co/functions/v1/backend';
+
+async function callBackend(action, parameters = {}) {
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ action, parameters })
+    });
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error);
+    return result.data;
+  } catch (error) {
+    console.error(`Error executing ${action}:`, error);
+    throw error;
+  }
+}
 
     /**
      * Replaces google.script.run for GitHub Pages.
