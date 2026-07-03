@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Admin Portal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    :root{
+      --bg:#f4f7fb; --card:#fff; --ink:#101828; --muted:#667085; --line:#d0d5dd;
+      --brand:#155eef; --brand2:#0f3fb3; --ok:#067647; --warn:#b54708; --bad:#b42318;
+      --shadow:0 10px 30px rgba(16,24,40,.08); --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;background:linear-gradient(180deg,#eef4ff 0,var(--bg) 240px);color:var(--ink)}
+    .wrap{max-width:1600px;margin:0 auto;padding:14px}
+    .hidden{display:none!important}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+    
+    /* Polished Result Cards */
+    .result-card{
+      background:var(--card); border:1px solid #e4e7ec; border-radius:20px; padding:24px; 
+      cursor:pointer; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      display:flex; flex-direction:column; gap:10px; position: relative; overflow: hidden;
+    }
+    .result-card:hover{
+      transform:translateY(-6px) scale(1.01); box-shadow:0 20px 40px rgba(16,24,40,0.08); 
+      border-color:var(--brand); z-index: 10;
+    }
+    .result-card .rc-name{font-size:18px; font-weight:800; color:#101828; letter-spacing: -0.3px;}
+    .result-card .rc-meta{font-size:14px; color:var(--muted); display:flex; align-items:center; gap:8px; font-weight: 500;}
+    
+    /* Polished Master Search & Hero */
+    .search-hero {
+      background: #fff;
+      padding: 32px; border-radius: 24px; border: 1px solid var(--line);
+      box-shadow: 0 12px 32px rgba(16,24,40,0.05); margin-bottom: 24px;
+      position: relative; overflow: hidden;
+    }
+    .search-hero::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+      background: linear-gradient(90deg, var(--brand), var(--brand2));
+    }
+    .search-input-wrap input {
+      font-size: 18px; padding: 20px 24px; border-radius: 16px;
+      border: 2px solid #e4e7ec; box-shadow: 0 4px 12px rgba(16,24,40,0.03);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: #fbfdff;
+    }
+    .search-input-wrap input:focus { 
+      border-color: var(--brand); background: #fff;
+      box-shadow: 0 0 0 4px rgba(21, 94, 239, 0.15), 0 4px 12px rgba(16,24,40,0.05); 
+      outline: none; 
+    }
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;gap:14px}
+    .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    @media (max-width:1100px){.g2,.g3,.g4{grid-template-columns:1fr}}
+    input,select,textarea,button{font:inherit}
+    input,select,textarea{width:100%;border:1px solid #cfd8e3;border-radius:10px;padding:10px 12px;background:#fff}
+    textarea{min-height:96px;resize:vertical}
+    .btn{border:0;border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:800;transition:opacity 0.2s}
+    .btn:hover{opacity:0.9}
+    .p{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+    .s{background:#fff;border:1px solid #d0d5dd}
+    .d{background:#fee4e2;color:var(--bad);border:1px solid #fecdca}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;background:#eef4ff;border:1px solid #cfe0ff;color:var(--brand2)}
+    
+    /* Navigation Tabs Restyled */
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px; padding:12px; background:#fff; border-radius:var(--r); border:1px solid var(--line); box-shadow:var(--shadow);}
+    .tab{padding:10px 18px;border-radius:12px;border:1px solid transparent;background:transparent;font-weight:700;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+    .tab:hover{background:#f4f7fb; color:var(--ink)}
+    .tab.a{background:var(--brand);color:#fff;box-shadow:0 4px 10px rgba(21, 94, 239, 0.3);}
+    
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:12px 14px;border-bottom:1px solid #edf2f7;text-align:left;vertical-align:top}
+    th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;background:#fcfdff;color:#475467}
+    .m{padding:20px;border-radius:16px;border:1px solid #e4e7ec;background:#fff; text-align:center;}
+    .status{display:none;padding:12px 14px;border-radius:14px;margin-bottom:14px}
+    .show{display:block}
+    .si{background:#eef4ff;color:#175cd3;border:1px solid #c7d7fe}
+    .se{background:#fef3f2;color:#b42318;border:1px solid #fecdca}
+    .ss{background:#ecfdf3;color:#067647;border:1px solid #abefc6}
+    .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:99;backdrop-filter:blur(4px)}
+    .modal.s{display:flex}
+    #profileModal{z-index:100;}
+    #subjectModal{z-index:9999 !important;}
+    .modal-card{width:min(1400px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:24px;border:1px solid var(--line);box-shadow:0 24px 48px rgba(0,0,0,0.1);padding:24px}
+    .small{font-size:13px;color:var(--muted)}
+    .ribbon{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid #e4e7ec;background:#f8fafc;color:#475467}
+    .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+    .grow{flex:1 1 140px;min-width:140px}
+    .spacer{height:16px}
+    .muted{color:var(--muted)}
+    .ok-text{color:var(--ok)}
+    .danger-text{color:var(--bad)}
+    .warn-text{color:var(--warn)}
+    /* Polished Stats Row */
+    .metric{
+      padding:24px 20px; border-radius:20px; border:1px solid var(--line);
+      background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+      text-align:center; box-shadow: 0 4px 12px rgba(16,24,40,0.03);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric:hover {
+      transform: translateY(-5px); box-shadow: 0 12px 24px rgba(16,24,40,0.06);
+    }
+    .metric .k{color:var(--muted);font-size:13px;margin-bottom:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;}
+    .metric .v{font-size:36px;font-weight:900;line-height:1; letter-spacing: -1px;}
+    .semester-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .semester-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 20px;background:#f8fbff;border-bottom:1px solid var(--line)}
+    .semester-title{font-weight:800; font-size:16px;}
+    .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;white-space:nowrap}
+    .b-ok{background:#ecfdf3;color:#067647;border:1px solid #abefc6}
+    .b-bad{background:#fef3f2;color:#b42318;border:1px solid #fecdca}
+    .b-warn{background:#fff7ed;color:#b54708;border:1px solid #fed7aa}
+    .b-info{background:#eef4ff;color:#175cd3;border:1px solid #c7d7fe}
+    .b-neutral{background:#f8fafc;color:#475467;border:1px solid #e4e7ec}
+
+    /* Mobile optimizations */
+    @media (max-width:768px){
+      .wrap{padding:10px}
+      .g4{grid-template-columns:repeat(2,1fr)!important}
+      .g3{grid-template-columns:1fr!important}
+      .g2{grid-template-columns:1fr!important}
+      .search-hero{padding:20px}
+      .search-input-wrap input{font-size:16px; padding:16px}
+      .metric .v{font-size:28px}
+      .tabs{padding:8px; gap:6px}
+      .tab{padding:8px 12px; font-size:13px}
+      table{font-size:13px}
+      th,td{padding:10px 8px}
+      .modal-card{padding:16px; border-radius:16px}
+      .semester-head{flex-direction:column; align-items:flex-start; gap:8px}
+    }
+    /* Improve phone touch targets */
+    .btn{min-height:44px; touch-action:manipulation}
+    input,select,textarea{min-height:44px}
+
+  </style>
+</head>
+<body>
+  <!-- Login View -->
+  <div id="loginView" class="wrap" style="min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg, #f4f7fb 0%, #eef4ff 100%);padding:16px">
+    <div class="card" style="width:100%;max-width:460px;padding:clamp(20px, 6vw, 36px);border-radius:24px;box-shadow:0 20px 40px rgba(16,24,40,0.06);border:1px solid rgba(208,213,221,0.6);background:#fff">
+      <div style="text-align:center;margin-bottom:20px">
+        <div class="chip" style="background:#eef4ff;color:var(--brand2);font-weight:600;padding:6px 16px;margin-bottom:12px">University of Raparin</div>
+        <h1 style="margin:0 0 6px 0;font-size:clamp(20px, 4.5vw, 26px);font-weight:800;color:#101828;letter-spacing:-0.5px">Administrative Portal</h1>
+        <p class="small" style="color:var(--muted);margin:0;line-height:1.4">College of Basic Education<br>English Language Department</p>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e4e7ec;border-radius:14px;padding:14px;text-align:center;margin-bottom:20px">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:4px">Welcome to the Administration Console</div>
+        <div style="font-size:12px;color:#667085;line-height:1.45">Please provide your valid system security code below to modify or interact with institutional records.</div>
+      </div>
+      <div class="grid" style="gap:20px">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#344054">Admin Code</label>
+          <input id="adminCode" type="password" placeholder="••••••••" style="padding:14px;border-radius:12px;border:1px solid #d0d5dd;box-shadow:0 1px 2px rgba(16,24,40,0.05)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+          <button class="btn p" style="padding:14px;border-radius:12px;font-weight:600" onclick="login()">Login</button>
+          <button class="btn s" style="padding:14px;border-radius:12px;font-weight:600;color:#344054" onclick="adminCode.value=''">Clear</button>
+        </div>
+        <div id="loginStatus" class="status si" style="border-radius:12px;margin-top:0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application View -->
+  <div id="appView" class="wrap hidden">
+    
+    <!-- Redesigned Top Header -->
+    <div style="text-align:center; padding: 24px; background: #fff; border-bottom: 1px solid var(--line); margin-bottom: 20px; border-radius: var(--r); box-shadow: var(--shadow); position:relative;">
+      <h1 style="margin:0;color:var(--ink);font-size:clamp(18px, 3vw, 24px);font-weight:800;letter-spacing:-0.5px;line-height:1.4">University of Raparin, College of Basic Education, English Language Department</h1>
+      <h2 style="margin:8px 0 0 0;color:var(--brand);font-size:clamp(16px, 2vw, 20px);font-weight:800;text-transform:uppercase;letter-spacing:1px;">Administrative Portal</h2>
+      
+      <div style="margin-top: 18px; display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span id="chipAdmin" class="chip" style="background:#f8fafc;color:var(--muted);padding:8px 14px;font-weight:700;border:1px solid #e4e7ec">Admin</span>
+        <button class="btn d" style="padding:8px 18px;font-weight:700;border-radius:12px" onclick="logout()">Logout / Exit</button>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons (Directly below header) -->
+    <div class="tabs">
+      <button class="tab a" data-t="dash">Dashboard</button>
+      <button class="tab" data-t="students">Students</button>
+      <button class="tab" data-t="teachers">Teachers</button>
+      <button class="tab" data-t="syllabus">Syllabus</button>
+      <button class="tab" data-t="lists">Reporting Lists</button>
+      <button class="tab" data-t="ann">Announcements</button>
+      <button class="tab" data-t="docs">Backup</button>
+    </div>
+
+    <div id="statusBar" class="status si"></div>
+
+    <!-- Dashboard Tab Content -->
+    <div id="tab-dash" class="stack">
+      
+      <!-- Dashboard Statistics Row (Visible when NO search/filter is active) -->
+      <div id="dash-stats" class="grid g4" style="margin-bottom:24px;">
+        <!-- Filled by renderDashboard() -->
+      </div>
+
+      <!-- Exclusive Search & Filter Section (Only on Dashboard) -->
+      <div class="search-hero">
+        <div class="search-input-wrap" style="margin-bottom: 20px;">
+          <label style="font-weight:800; font-size:15px; color:#101828; margin-bottom:8px; display:block;">Master Search</label>
+          <input id="searchBox" placeholder="🔍 Search across all students by name, unique code, or email address..." oninput="applyFilters()">
+        </div>
+        
+        <div>
+          <label style="font-weight:700; font-size:13px; color:var(--muted); margin-bottom:8px; display:block;">Filter Criteria</label>
+          <div class="toolbar" style="background:#fff; padding:12px; border-radius:14px; border:1px solid #e4e7ec; box-shadow:0 2px 4px rgba(16,24,40,0.02);">
+            <div class="grow"><label class="small" style="font-weight:600;margin-bottom:4px;display:block;">Academic Year</label><select id="fYear" onchange="persistFilter();applyFilters()"><option value="">All Years</option></select></div>
+            <div class="grow"><label class="small" style="font-weight:600;margin-bottom:4px;display:block;">Stage</label><select id="fStage" onchange="persistFilter();applyFilters()"><option value="">All Stages</option></select></div>
+            <div class="grow"><label class="small" style="font-weight:600;margin-bottom:4px;display:block;">Semester</label><select id="fSem" onchange="persistFilter();applyFilters()"><option value="">All Semesters</option></select></div>
+            <div class="grow"><label class="small" style="font-weight:600;margin-bottom:4px;display:block;">Group</label><select id="fGroup" onchange="persistFilter();applyFilters()"><option value="">All Groups</option></select></div>
+            <div class="grow"><label class="small" style="font-weight:600;margin-bottom:4px;display:block;">Subject</label><select id="fSubject" onchange="persistFilter();applyFilters()"><option value="">All Subjects</option></select></div>
+            <div class="grow"><label class="small" style="font-weight:600;margin-bottom:4px;display:block;">Status</label><select id="fStatus" onchange="persistFilter();applyFilters()"><option value="">All Statuses</option></select></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Results Grid (Visible when search/filter IS active) -->
+      <div id="dash-results" class="grid g3" style="display:none;">
+        <!-- Interactive result cards populated here -->
+      </div>
+
+    </div>
+
+    <!-- Other Tabs -->
+    <div id="tab-students" class="hidden stack"></div>
+    <div id="tab-teachers" class="hidden stack"></div>
+    <div id="tab-syllabus" class="hidden stack"></div>
+    <div id="tab-lists" class="hidden stack"></div>
+    <div id="tab-ann" class="hidden stack"></div>
+    <div id="tab-docs" class="hidden stack"></div>
+  </div>
+
+  <!-- Modals (Cleaned up duplicates) -->
+  <div id="subjectModal" class="modal">
+    <div class="modal-card" style="max-width:760px">
+      <div class="row" style="justify-content:space-between;margin-bottom:14px">
+        <h3 id="subjectModalTitle" style="margin:0; font-size:20px; font-weight:800;">Subject Details</h3>
+        <button class="btn s" onclick="closeSubjectModal()">Close Details</button>
+      </div>
+      <div id="subjectModalBody"></div>
+    </div>
+  </div>
+
+  <div id="profileModal" class="modal">
+    <div class="modal-card">
+      <div class="row" style="justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #edf2f7; padding-bottom:16px;">
+        <h3 id="pmTitle" style="margin:0; font-size:22px; font-weight:800;">Student Profile</h3>
+        <button class="btn s" onclick="closeModal()">Close Profile</button>
+      </div>
+      <div id="pmBody"></div>
+    </div>
+  </div>
+
+  <div id="broadcastModal" class="modal">
+    <div class="modal-card" style="max-width:640px">
+      <div class="row" style="justify-content:space-between;margin-bottom:14px">
+        <h3 style="margin:0; font-size:20px; font-weight:800;">+ Issue Broadcast</h3>
+        <button class="btn s" onclick="closeBroadcast()">Close</button>
+      </div>
+      <div class="grid g2">
+        <div style="grid-column:1/-1">
+          <label class="small" style="font-weight:700">Announcements</label>
+          <textarea id="bcText" placeholder="Type announcement text here..."></textarea>
+        </div>
+        <div>
+          <label class="small" style="font-weight:700">to whome</label>
+          <select id="bcTo">
+            <option value="All">All</option>
+            <option value="Stage 1">Stage 1</option>
+            <option value="Stage 2">Stage 2</option>
+            <option value="Stage 3">Stage 3</option>
+            <option value="Stage 4">Stage 4</option>
+            <option value="Teachers">Teachers</option>
+          </select>
+        </div>
+        <div></div>
+        <div>
+          <label class="small" style="font-weight:700">time-start</label>
+          <input id="bcStart" type="date">
+        </div>
+        <div>
+          <label class="small" style="font-weight:700">time-End</label>
+          <input id="bcEnd" type="date">
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end;margin-top:16px;gap:8px">
+        <button class="btn s" onclick="closeBroadcast()">Cancel</button>
+        <button class="btn p" onclick="submitBroadcast()">Send & Store</button>
+      </div>
+      <div id="bcStatus" class="small" style="margin-top:10px;color:var(--muted)"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // GITHUB PAGES CONFIGURATION
+    // ==========================================
+    // REPLACE THIS URL WITH YOUR DEPLOYED APPS SCRIPT WEB APP URL
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxk5KJmJlYnnvmIeF8MiJktBCAOYXpBh-UbDwqoCzpE9jBXiLzSoUrZJeQdCsQJzGvunw/exec';
+
+    /**
+     * Replaces google.script.run for GitHub Pages.
+     * Communicates securely via Fetch POST with the text/plain payload workaround 
+     * to prevent CORS preflight blockages by Google Apps Script.
+     */
+    async function callBackend(action, parameters = {}) {
+      try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, parameters })
+        });
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+        return result.data;
+      } catch (error) {
+        console.error(`Error executing ${action}:`, error);
+        throw error;
+      }
+    }
+
+    'use strict';
+    const LANG = 'ku';
+    const state = {
+      adminCode: '',
+      init: null,
+      filters: JSON.parse(localStorage.getItem('adminFilters') || '{}'),
+      activeTab: 'dash',
+      profile: null
+    };
+
+    function id(x){ return document.getElementById(x); }
+
+    function setStatus(msg, ok){
+      const el = id('statusBar');
+      el.className = 'status show ' + (ok ? 'ss' : 'se');
+      el.textContent = msg;
+    }
+
+    function setLoginStatus(msg, ok){
+      const el = id('loginStatus');
+      el.className = 'status show ' + (ok ? 'ss' : 'se');
+      el.textContent = msg;
+    }
+
+    window.login = function login(){
+      const code = id('adminCode').value.trim();
+      if (!code) return setLoginStatus('Enter admin code.', false);
+      setLoginStatus('Authenticating securely...', true);
+
+      callBackend('adminAuth', { code: code })
+        .then(function(r){
+          if (!r || !r.ok) {
+            setLoginStatus((r && r.error) ? r.error : 'Invalid admin code.', false);
+            return;
+          }
+          state.adminCode = code;
+          id('loginView').classList.add('hidden');
+          id('appView').classList.remove('hidden');
+          id('chipAdmin').textContent = 'Administrator: ' + code;
+          bootstrap();
+        })
+        .catch(function(e){
+          setLoginStatus(e && e.message ? e.message : 'Login failed.', false);
+        });
+    }
+
+    window.logout = function logout(){
+      localStorage.removeItem('adminFilters');
+      location.reload();
+    }
+
+    function persistFilter(){
+      state.filters = {
+        y: id('fYear').value,
+        s: id('fStage').value,
+        sem: id('fSem').value,
+        g: id('fGroup').value,
+        sub: id('fSubject').value,
+        st: id('fStatus').value,
+        q: id('searchBox').value
+      };
+      localStorage.setItem('adminFilters', JSON.stringify(state.filters));
+    }
+
+    function restoreFilters(){
+      const f = state.filters || {};
+      id('fYear').value = f.y || '';
+      id('fStage').value = f.s || '';
+      id('fSem').value = f.sem || '';
+      id('fGroup').value = f.g || '';
+      id('fSubject').value = f.sub || '';
+      id('fStatus').value = f.st || '';
+      id('searchBox').value = f.q || '';
+    }
+
+    function bootstrap(){
+      callBackend('getDashboardInit', { adminCode: state.adminCode })
+        .then(function(r){
+          state.init = r;
+          restoreFilters();
+          fillFilters(r.filters);
+          renderDashboard(r);
+          renderStudents(r.students);
+          renderTeachers(r.teachers);
+          renderSyllabus(r.syllabus);
+          renderLists(r.lists);
+          renderAnnouncements(r.announcements);
+          renderBackup();
+          loadPostponements();
+          applyFilters(); // Setup initial views
+          setStatus('System modules loaded successfully.', true);
+        })
+        .catch(function(e){
+          setStatus(e && e.message ? e.message : 'Bootstrap framework failed to load.', false);
+        });
+    }
+
+    function fillFilters(f){
+      [id('fYear'),id('fStage'),id('fSem'),id('fGroup'),id('fSubject'),id('fStatus')].forEach(x => {
+        [...x.querySelectorAll('option:not(:first-child)')].forEach(o => o.remove());
+      });
+      (f.years || []).forEach(v => addOpt(id('fYear'), v));
+      (f.stages || []).forEach(v => addOpt(id('fStage'), v));
+      (f.semesters || []).forEach(v => addOpt(id('fSem'), v));
+      (f.groups || []).forEach(v => addOpt(id('fGroup'), v));
+      (f.subjects || []).forEach(v => addOpt(id('fSubject'), v));
+      (f.statuses || []).forEach(v => addOpt(id('fStatus'), v));
+    }
+
+    function addOpt(sel, v){
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = v;
+      sel.appendChild(o);
+    }
+
+    function renderDashboard(r){
+      // Only populates the stats row now; layout handles everything else.
+      id('dash-stats').innerHTML = [
+        metric('Total Enrolled Students', r.students.length, 'var(--brand2)'),
+        metric('Active Teachers', r.teachers.length, '#067647'),
+        metric('Syllabus Subjects', r.syllabus.length, '#667085'),
+        metric('System Alerts', (r.lists && r.lists.list1 ? r.lists.list1.length : 0), '#b42318')
+      ].join('');
+    }
+
+    function metric(k,v,color){
+      const icons = {
+        'Total Enrolled Students': '🎓',
+        'Active Teachers': '👩‍🏫',
+        'Syllabus Subjects': '📚',
+        'System Alerts': '⚠️'
+      };
+      const gradients = {
+        'Total Enrolled Students': 'linear-gradient(135deg, #155eef 0%, #0f3fb3 100%)',
+        'Active Teachers': 'linear-gradient(135deg, #067647 0%, #055a36 100%)',
+        'Syllabus Subjects': 'linear-gradient(135deg, #6941c6 0%, #53389e 100%)',
+        'System Alerts': 'linear-gradient(135deg, #b42318 0%, #912018 100%)'
+      };
+      return `<div class="card m" style="padding:0; overflow:hidden; border:none; box-shadow:0 8px 24px rgba(16,24,40,0.08); border-radius:20px;">
+        <div style="background:${gradients[k]||gradients['Total Enrolled Students']}; padding:20px; color:#fff; position:relative;">
+          <div style="position:absolute; top:-10px; right:-10px; font-size:64px; opacity:0.15;">${icons[k]||'📊'}</div>
+          <div style="font-size:13px; text-transform:uppercase; letter-spacing:1px; font-weight:700; opacity:0.9; margin-bottom:8px;">${escapeHtml(k)}</div>
+          <div style="font-size:36px; font-weight:900; line-height:1;">${escapeHtml(String(v))}</div>
+        </div>
+      </div>`;
+    }
+
+    function applyFilters(){
+      persistFilter();
+      const q = id('searchBox').value.toLowerCase().trim();
+      const f = state.filters || {};
+      
+      const students = (state.init && state.init.students ? state.init.students : []).filter(x => {
+        if (q && !(String(x.nameKurdish || '').toLowerCase().includes(q) || String(x.nameEnglish || '').toLowerCase().includes(q) || String(x.uniqueCode || '').toLowerCase().includes(q) || String(x.email || '').toLowerCase().includes(q))) return false;
+        if (f.y && String(x.admissionYear || '') !== f.y) return false;
+        if (f.s && String(x.stage || '') !== f.s) return false;
+        if (f.g && String(x.group || '') !== f.g) return false;
+        if (f.st && String(x.status || '') !== f.st) return false;
+        return true;
+      });
+
+      const hasActiveFilter = q || f.y || f.s || f.sem || f.g || f.sub || f.st;
+      const statsDiv = id('dash-stats');
+      const resDiv = id('dash-results');
+
+      if (hasActiveFilter) {
+        // Hide stats, show beautifully formatted result cards
+        statsDiv.style.display = 'none';
+        resDiv.style.display = 'grid';
+        
+        if (students.length > 0) {
+          setStatus(`Found ${students.length} student records matching your criteria.`, true);
+          resDiv.innerHTML = students.map(x => `
+            <div class="result-card" onclick="openProfile('${escapeJs(x.uniqueCode)}')">
+              <div class="rc-name">${escapeHtml(x.nameKurdish || x.nameEnglish)}</div>
+              <div class="rc-meta"><b>Code:</b> ${escapeHtml(x.uniqueCode)}</div>
+              <div class="rc-meta"><b>Stage:</b> ${escapeHtml(x.stage || '-')} &nbsp;&bull;&nbsp; <b>Group:</b> ${escapeHtml(x.group || '-')}</div>
+              <div class="rc-meta">
+                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${x.status === 'Active' ? 'var(--ok)' : 'var(--warn)'};"></span>
+                ${escapeHtml(x.status || '-')}
+              </div>
+            </div>
+          `).join('');
+        } else {
+          setStatus('No records found matching your filters.', false);
+          resDiv.innerHTML = `<div style="grid-column: 1 / -1; padding: 40px; text-align: center; background: #fff; border: 1px solid var(--line); border-radius: var(--r); color: var(--muted);">No students align with the selected criteria. Try broadening your search.</div>`;
+        }
+      } else {
+        // Reset view: Hide results, show statistics row
+        statsDiv.style.display = 'grid';
+        resDiv.style.display = 'none';
+        resDiv.innerHTML = '';
+        setStatus('Ready.', true);
+      }
+    }
+
+    function renderStudents(s){
+      // 1. Group students into cohorts based on Stage or Status
+      const stages = { '1': [], '2': [], '3': [], '4': [], 'completed': [] };
+      
+      s.forEach(x => {
+        const stg = String(x.stage || '').toLowerCase();
+        const stat = String(x.status || '').toLowerCase();
+        if (stat.includes('graduated') || stat.includes('completed') || stg.includes('completed')) {
+          stages['completed'].push(x);
+        } else if (stg.includes('1') || stg.includes('یەکەم')) {
+          stages['1'].push(x);
+        } else if (stg.includes('2') || stg.includes('دووەم')) {
+          stages['2'].push(x);
+        } else if (stg.includes('3') || stg.includes('سێیەم')) {
+          stages['3'].push(x);
+        } else if (stg.includes('4') || stg.includes('چوارەم')) {
+          stages['4'].push(x);
+        } else {
+          stages['1'].push(x); // Fallback
+        }
+      });
+
+      // 2. Helper to check if a student has failed/pending classes in the tracker
+      const isOverloaded = (code) => {
+         const records = (state.init && state.init.lists && state.init.lists.combined ? state.init.lists.combined : []);
+         const failed = records.filter(r => String(r.studentCode).trim() === String(code).trim() && (String(r.status).toLowerCase().includes('fail') || String(r.status).toLowerCase().includes('reach')));
+         return failed.length > 0;
+      };
+
+      // 3. Helper to generate the table HTML for a specific cohort
+      const buildTable = (arr) => {
+        if(!arr.length) return '<div class="m" style="color:var(--muted); padding: 40px;">No students found for this cohort.</div>';
+        
+        // Sort alphabetically by Kurdish Name before rendering
+        arr.sort((a, b) => String(a.nameKurdish || '').localeCompare(String(b.nameKurdish || '')));
+
+        let html = '<div class="table-wrap"><table style="margin:0;"><thead><tr><th style="width:50px">#</th><th>Kurdish Name</th><th>Stage</th><th>Group</th><th>Classification</th><th style="text-align:right;">Actions</th></tr></thead><tbody>';
+        arr.forEach((x, i) => {
+           const overloaded = isOverloaded(x.uniqueCode);
+           const classBadge = overloaded 
+              ? '<span class="badge b-warn">⚠ Overloaded</span>' 
+              : '<span class="badge b-ok">Regular</span>';
+           html += `<tr>
+             <td style="color:var(--muted);"><b>${i+1}</b></td>
+             <td><b style="color:var(--ink); font-size:15px;">${escapeHtml(x.nameKurdish || '-')}</b><div class="small" style="margin-top:4px;">UID: ${escapeHtml(x.uniqueCode)}</div></td>
+             <td>${escapeHtml(x.stage || '-')}</td>
+             <td><span class="badge b-neutral">${escapeHtml(x.group || '-')}</span></td>
+             <td>${classBadge}</td>
+             <td style="text-align:right;"><button class="btn s" onclick="openProfile('${escapeJs(x.uniqueCode || '')}')">View Profile</button></td>
+           </tr>`;
+        });
+        html += '</tbody></table></div>';
+        return html;
+      };
+
+      id('tab-students').innerHTML = `
+        <div class="card" style="margin-bottom:24px; text-align:center; padding:32px 24px; background:linear-gradient(135deg, #f8fbff, #ffffff); border-color:var(--brand); box-shadow: 0 4px 12px rgba(21, 94, 239, 0.05);">
+           <h2 style="margin:0; font-size:22px; font-weight:900; color:var(--brand2); letter-spacing: -0.5px;">University of Raparin, College of Basic Education, English Language Department</h2>
+           <p style="margin:8px 0 0 0; color:var(--muted); font-weight:600; text-transform: uppercase; letter-spacing: 1px; font-size: 13px;">Student Cohort Directory</p>
+        </div>
+        
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div class="row" style="justify-content:space-between; padding: 16px 20px; border-bottom:1px solid var(--line); background: #fbfdff;">
+            <div class="tabs" style="margin:0; padding:0; border:none; box-shadow:none; background:transparent;">
+              <button class="tab sub-tab a" onclick="switchStgTab('1', this)">First Year</button>
+              <button class="tab sub-tab" onclick="switchStgTab('2', this)">Second Year</button>
+              <button class="tab sub-tab" onclick="switchStgTab('3', this)">Third Year</button>
+              <button class="tab sub-tab" onclick="switchStgTab('4', this)">Fourth Year</button>
+              <button class="tab sub-tab" onclick="switchStgTab('completed', this)">Completed</button>
+            </div>
+            
+          </div>
+          
+          <div id="stg-1" class="stg-view">${buildTable(stages['1'])}</div>
+          <div id="stg-2" class="stg-view hidden">${buildTable(stages['2'])}</div>
+          <div id="stg-3" class="stg-view hidden">${buildTable(stages['3'])}</div>
+          <div id="stg-4" class="stg-view hidden">${buildTable(stages['4'])}</div>
+          <div id="stg-completed" class="stg-view hidden">${buildTable(stages['completed'])}</div>
+        </div>
+      `;
+    }
+
+    function renderTeachers(t){
+      // Sort teachers alphabetically by name for a cleaner list
+      t.sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+
+      let html = `
+        <div class="card" style="margin-bottom:24px; text-align:center; padding:32px 24px; background:linear-gradient(135deg, #f8fbff, #ffffff); border-color:var(--brand); box-shadow: 0 4px 12px rgba(21, 94, 239, 0.05);">
+           <h2 style="margin:0; font-size:22px; font-weight:900; color:var(--brand2); letter-spacing: -0.5px;">University of Raparin, College of Basic Education, English Language Department</h2>
+           <p style="margin:8px 0 0 0; color:var(--muted); font-weight:600; text-transform: uppercase; letter-spacing: 1px; font-size: 13px;">Teacher Registry & Faculty Directory</p>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden; box-shadow: 0 12px 32px rgba(16,24,40,0.04); border: 1px solid var(--line);">
+          <div class="row" style="justify-content:space-between; padding: 20px 24px; border-bottom:1px solid var(--line); background: #fbfdff;">
+            <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--ink);">Faculty Members</h3>
+            
+          </div>
+          <div class="table-wrap" style="border: none; border-radius: 0;">
+            <table style="margin:0; width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #f9faff; border-bottom: 2px solid #e4e7ec;">
+                  <th style="width: 50px; padding: 16px; text-align: center; color: var(--muted); font-weight: 800;">#</th>
+                  <th style="padding: 16px; text-align: left; font-weight: 800;">Faculty Member</th>
+                  <th style="padding: 16px; text-align: left; font-weight: 800;">Contact (Email)</th>
+                  <th style="padding: 16px; text-align: left; font-weight: 800;">Assigned Subjects</th>
+                  <th style="padding: 16px; text-align: right; font-weight: 800;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+
+      if (t.length === 0) {
+        html += `<tr><td colspan="5" style="text-align:center; padding: 40px; color: var(--muted); font-weight: 500;">No teachers found in the registry.</td></tr>`;
+      } else {
+        t.forEach((x, i) => {
+          let subs = (x.subjects || []).map(s => `<span class="badge b-info" style="margin:2px 4px 2px 0; font-weight:600; letter-spacing:0.3px; border-radius:8px; padding: 4px 10px;">${escapeHtml(s)}</span>`).join('');
+          if (!subs) subs = '<span style="color:var(--muted); font-size:13px; font-style:italic;">No Subjects Assigned</span>';
+
+          html += `
+            <tr style="border-bottom: 1px solid #f2f4f7; transition: all 0.2s ease;" onmouseover="this.style.background='#f6f9ff'" onmouseout="this.style.background='transparent'">
+              <td style="text-align: center; color:var(--muted); font-weight: 700;">${i + 1}</td>
+              <td style="padding: 16px;">
+                <div style="font-size:16px; font-weight:800; color:var(--ink);">${escapeHtml(x.name || '-')}</div>
+                <div style="font-size:12px; color:var(--muted); margin-top:6px; font-family:monospace; background:#f2f4f7; display:inline-block; padding:2px 6px; border-radius:4px;">UID: ${escapeHtml(x.uniqueCode || '')}</div>
+              </td>
+              <td style="padding: 16px; color:var(--brand); font-weight:600; font-size: 14px;">${escapeHtml(x.email || '-')}</td>
+              <td style="padding: 16px;">${subs}</td>
+              <td style="padding: 16px; text-align:right; white-space: nowrap;">
+                 <button class="btn s" style="color:var(--brand2); border-color:#c7d7fe; background:#eef4ff; padding:8px 16px; font-size:13px; font-weight:700; border-radius:8px; margin-right:8px; transition: all 0.2s;" onmouseover="this.style.background='#d1e0ff'" onmouseout="this.style.background='#eef4ff'" onclick="editTeacher('${escapeJs(x.uniqueCode)}')">Edit</button>
+                 <button class="btn s" style="color:var(--brand2); border-color:#c7d7fe; background:#eef4ff; padding:8px 16px; font-size:13px; font-weight:700; border-radius:8px; transition: all 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eef4ff'" onclick="window.open('mailto:${escapeHtml(x.email)}?subject=University Notice')">Email</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      html += `
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+      
+      id('tab-teachers').innerHTML = html;
+    }
+
+    function renderSyllabus(s){
+      // Group syllabus records by Year
+      const grouped = {};
+      s.forEach(x => {
+         let y = String(x.year || 'Unknown Year').trim();
+         if (!grouped[y]) grouped[y] = [];
+         grouped[y].push(x);
+      });
+
+      // Sort the academic years naturally
+      const years = Object.keys(grouped).sort();
+
+      // 4 main colors by stage
+      const stageColors = {
+        '1': { bg: '#eff6ff', border: '#155eef', text: '#0f3fb3', header: '#dbeafe', accent: '#155eef' },
+        '2': { bg: '#fff7ed', border: '#f97316', text: '#b45309', header: '#ffedd5', accent: '#f97316' },
+        '3': { bg: '#ecfdf5', border: '#10b981', text: '#047857', header: '#d1fae5', accent: '#10b981' },
+        '4': { bg: '#f5f3ff', border: '#8b5cf6', text: '#6d28d9', header: '#ede9fe', accent: '#8b5cf6' }
+      };
+
+      let html = `
+        <div class="card" style="margin-bottom:24px; text-align:center; padding:32px 24px; background:linear-gradient(135deg, #fbfdff, #ffffff); border-color:var(--brand); box-shadow: 0 4px 12px rgba(21, 94, 239, 0.05);">
+           <h2 style="margin:0; font-size:22px; font-weight:900; color:var(--brand2); letter-spacing: -0.5px;">University of Raparin, College of Basic Education, English Language Department</h2>
+           <p style="margin:8px 0 0 0; color:var(--muted); font-weight:600; text-transform: uppercase; letter-spacing: 1px; font-size: 13px;">Academic Syllabus & Core Curriculum</p>
+        </div>
+      `;
+
+      if (years.length === 0) {
+         html += `<div class="card" style="text-align:center; padding: 40px; color: var(--muted); font-weight: 500;">No curriculum records found in the database.</div>`;
+      }
+
+      years.forEach((y, index) => {
+         let stageNum = String(y).match(/\d+/) ? String(y).match(/\d+/)[0] : String(index+1);
+         let c = stageColors[stageNum] || stageColors['1'];
+         let courses = grouped[y];
+         
+         // Group by semester
+         const bySem = {};
+         courses.forEach(course => {
+           let sem = String(course.semester || '1');
+           if (!bySem[sem]) bySem[sem] = [];
+           bySem[sem].push(course);
+         });
+         
+         // Sort courses inside each semester
+         Object.keys(bySem).forEach(sem => {
+           bySem[sem].sort((a,b) => String(a.moduleCode || '').localeCompare(String(b.moduleCode || '')));
+         });
+
+         html += `
+           <div class="card" style="margin-bottom: 28px; padding: 0; overflow: hidden; border: 2px solid ${c.border}; box-shadow: 0 12px 32px rgba(16,24,40,0.06); border-radius:24px;">
+              <div style="background: linear-gradient(135deg, ${c.header}, #fff); padding: 22px 26px; border-bottom: 2px solid ${c.border}; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                 <div style="display:flex; align-items:center; gap:14px;">
+                   <div style="width:48px; height:48px; border-radius:14px; background:${c.accent}; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900; font-size:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">${stageNum}</div>
+                   <div>
+                     <h3 style="margin:0; font-size: 20px; font-weight: 900; color: ${c.text}; letter-spacing:-0.3px;">Stage ${stageNum}</h3>
+                     <div style="font-size:12px; color:${c.text}; opacity:0.7; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;">Academic Year ${escapeHtml(y)}</div>
+                   </div>
+                 </div>
+                 <span style="background: #fff; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 800; color: ${c.text}; border: 2px solid ${c.border}; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">${courses.length} Modules</span>
+              </div>
+              <div style="padding:20px; background:#fbfdff;">
+         `;
+
+         Object.keys(bySem).sort().forEach(sem => {
+           const semCourses = bySem[sem];
+           html += `
+                <div style="margin-bottom:${sem === Object.keys(bySem).sort().slice(-1)[0] ? '0' : '20px'}; background:#fff; border-radius:16px; overflow:hidden; border:1px solid #e4e7ec; box-shadow:0 2px 8px rgba(16,24,40,0.03);">
+                  <div style="background:${c.bg}; padding:12px 18px; border-bottom:1px solid ${c.border}; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight:800; color:${c.text}; font-size:14px; text-transform:uppercase; letter-spacing:0.5px;">Semester ${escapeHtml(sem)}</div>
+                    <div style="font-size:12px; color:${c.text}; opacity:0.8; font-weight:600;">${semCourses.length} subjects</div>
+                  </div>
+                  <div style="overflow-x:auto;">
+                    <div style="min-width:600px;">
+           `;
+           
+           semCourses.forEach(sub => {
+              let th = parseFloat(sub.hoursTheory) || 0;
+              let pr = parseFloat(sub.hoursPractical) || 0;
+              let total = th + pr;
+
+              html += `
+                      <div style="display:grid; grid-template-columns:110px 1fr 70px 70px; gap:12px; padding:14px 18px; border-bottom:1px solid #f2f4f7; align-items:center; transition:background 0.2s;" onmouseover="this.style.background='${c.bg}'" onmouseout="this.style.background='transparent'">
+                        <div style="font-family:monospace; font-size:13px; font-weight:800; color:${c.accent}; background:${c.bg}; padding:6px 10px; border-radius:8px; text-align:center; border:1px solid ${c.border};">${escapeHtml(sub.moduleCode || '-')}</div>
+                        <div style="font-size:15px; font-weight:700; color:var(--ink);">${escapeHtml(sub.name || '-')}</div>
+                        <div style="text-align:center;"><span style="background:${c.accent}; color:#fff; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:800;">${escapeHtml(sub.ects || '0')} ECTS</span></div>
+                        <div style="text-align:right; font-weight:800; color:${c.text}; font-size:14px;">${total}h</div>
+                      </div>
+              `;
+           });
+           
+           html += `
+                    </div>
+                  </div>
+                </div>
+           `;
+         });
+
+         html += `
+              </div>
+           </div>
+         `;
+      });
+
+      id('tab-syllabus').innerHTML = html;
+    }
+
+function renderLists(l){
+  window.__ACADEMIC_YEAR = (l.list1 && l.list1[0] && l.list1[0].currentAcademicYear) || '';
+  const header = `
+    <div class="card" style="margin-bottom:24px;text-align:center;padding:32px;background:linear-gradient(135deg,#fbfdff,#fff);border:1px solid var(--brand);box-shadow:0 8px 24px rgba(21,94,239,.08)">
+      <h2 style="margin:0;font-size:24px;font-weight:900;color:var(--brand2);letter-spacing:-.5px">University of Raparin, College of Basic Education, English Language Department</h2>
+      <p style="margin:8px 0 0;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:13px">Reporting Lists – Administrative Panel</p>
+    </div>`;
+
+  function exportBtn(id,title){return `<button class="btn s" onclick="exportListToExcel('${id}','${title}')">Excel</button><button class="btn s" onclick="exportListToWord('${id}','${title}')">Word</button>`;}
+
+function buildTable(arr, keys, tblId, highlightAll){
+    if(!arr||!arr.length) return '<div style=\"padding:20px;text-align:center;color:var(--muted)\">No records</div>';
+    let html = `<div class=\"table-wrap\" id=\"${tblId}\"><table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>`;
+    arr.forEach(r=>{
+      const isRed = highlightAll || r.isOverloaded;
+      const cls = isRed? 'class=\"overloaded\"' : '';
+      const style = isRed? 'style=\"color:#b42318;font-weight:700\"' : '';
+      html += `<tr ${cls} ${style}>${keys.map(k=>`<td>${escapeHtml(r[k]??'')}</td>`).join('')}</tr>`;
+    });
+    html += `</tbody></table></div>`;
+    return html;
+  }
+
+  const list1 = `<div class="card" style="margin-bottom:24px"><div style="padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between"><h3 style="margin:0">List 1: >8 Years (Admission Year vs Current Academic Year)</h3><div>${exportBtn('tbl-l1','List1_8Years')}</div></div><div style="padding:18px">${buildTable(l.list1||[],['name','currentAcademicYear','acceptanceYear','limitYear','postponedYears','yearsOver'],'tbl-l1',false)}</div></div>`;
+
+  const list2 = `<div class="card" style="margin-bottom:24px"><div style="padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between"><h3 style="margin:0">List 2: >4 Attempts – No Invoice (Fail/Absent=2, Ongoing/Postponed=0)</h3><div>${exportBtn('tbl-l2','List2_NoInvoice')}</div></div><div style="padding:18px">${buildTable(l.list2||[],['name','subject','subjectYear','email','attempts','yearsFailed'],'tbl-l2',true)}</div></div>`;
+
+  const list3 = `<div class="card" style="margin-bottom:24px"><div style="padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between"><h3 style="margin:0">List 3: >4 Attempts – Invoice Paid</h3><div>${exportBtn('tbl-l3','List3_WithInvoice')}</div></div><div style="padding:18px">${buildTable(l.list3||[],['name','subject','subjectYear','email','attempts','invoiceNumber','yearsFailed'],'tbl-l3',true)}</div></div>`;
+
+  // List 4 – Stage 1-4 with red overloaded, buttons for Regular/Overloaded/Both
+  let stageHtml = `<div class="card"><div style="padding:18px;border-bottom:1px solid var(--line)"><h3 style="margin:0 0 12px">List 4: Stage Directories (Regular + Overloaded)</h3><div style="display:flex;gap:8px;flex-wrap:wrap">`;
+  for(let s=1;s<=4;s++){ stageHtml += `<button class="btn s" onclick="showStage(${s})">Stage ${s}</button>`; }
+  stageHtml += `<button class="btn p" onclick="showStage('all')">Show All Stages</button>`;
+  stageHtml += `</div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn s" onclick="filterView('regular')">Regular</button><button class="btn s" onclick="filterView('overloaded')">Overloaded</button><button class="btn s" onclick="filterView('both')">Both</button></div></div><div style="padding:18px">`;
+
+for(let s=1;s<=4;s++){
+    const data = (l.stageLists&&l.stageLists[s])||[];
+    // sort: regular a-z, then overloaded a-z
+    data.sort((a,b)=>{ if(a.isOverloaded!==b.isOverloaded) return a.isOverloaded?1:-1; return String(a.name||'').localeCompare(String(b.name||'')); });
+    stageHtml += `<div id="stage-${s}" class="stage-view" style="${s!==1?'display:none':''}"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><b>Stage ${s}</b><div>${exportBtn('tbl-st'+s,'Stage'+s)}</div></div><div class="table-wrap" id="tbl-st${s}"><table><thead><tr><th style="width:45px">#</th><th>Name</th><th style="width:32%">Email</th><th style="width:110px">Current Stage</th><th style="width:110px">Type</th></tr></thead><tbody>`;
+    data.forEach((r,i)=>{
+      const isOver = r.isOverloaded;
+      const cls = isOver? 'class="overloaded"' : '';
+      const style = isOver? 'style="color:#b42318;font-weight:700"' : '';
+      stageHtml += `<tr ${cls} ${style} data-type="${r.type}"><td>${i+1}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.currentStage)}</td><td>${r.type}</td></tr>`;
+    });
+    stageHtml += `</tbody></table></div></div>`;
+  }
+  // All stages combined
+  const allData = [1,2,3,4].flatMap(s=> (l.stageLists&&l.stageLists[s])||[] );
+  allData.sort((a,b)=>{ const sa=parseInt(String(a.currentStage||'').match(/\d+/)||[0]); const sb=parseInt(String(b.currentStage||'').match(/\d+/)||[0]); if(sa!==sb) return sa-sb; if(a.isOverloaded!==b.isOverloaded) return a.isOverloaded?1:-1; return String(a.name||'').localeCompare(String(b.name||'')); });
+  stageHtml += `<div id="stage-all" class="stage-view" style="display:none"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><b>All Stages (1-4)</b><div>${exportBtn('tbl-st-all','AllStages')}</div></div><div class="table-wrap" id="tbl-st-all"><table><thead><tr><th style="width:45px">#</th><th>Name</th><th style="width:28%">Email</th><th style="width:90px">Stage</th><th style="width:90px">Type</th></tr></thead><tbody>`;
+  allData.forEach((r,i)=>{
+    const isOver = r.isOverloaded;
+    const cls = isOver? 'class="overloaded"' : '';
+    const style = isOver? 'style="color:#b42318;font-weight:700"' : '';
+    stageHtml += `<tr ${cls} ${style} data-type="${r.type}"><td>${i+1}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.currentStage)}</td><td>${r.type}</td></tr>`;
+  });
+  stageHtml += `</tbody></table></div></div>`;
+  stageHtml += `</div></div>`;
+
+  id('tab-lists').innerHTML = header + list1 + list2 + list3 + stageHtml;
+}
+
+function loadPostponements(){
+  callBackend('getPostponements', { adminCode: state.adminCode })
+    .then(function(data){
+      let container = document.getElementById('postpone-list');
+      if(!container){
+        container = document.createElement('div');
+        container.id = 'postpone-list';
+        id('tab-lists').appendChild(container);
+      }
+      const html = `<div class="card" style="margin-top:24px"><div style="padding:18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between"><h3 style="margin:0">List 5: Postponement Requests (Pending)</h3><button class="btn s" onclick="loadPostponements()">Refresh</button></div><div style="padding:18px">${data.length?`<div class="table-wrap"><table><thead><tr><th>Student Code</th><th>Academic Year</th><th>Postpone Type</th><th style="width:200px">Action</th></tr></thead><tbody>`+data.map(p=>`<tr><td>${escapeHtml(p.code)}</td><td>${escapeHtml(p.year)}</td><td>${escapeHtml(p.type)}</td><td><button class="btn s" style="background:#ecfdf3;color:#067647;border-color:#abefc6;margin-right:6px" onclick="decidePostpone('${p.code}','${p.year.replace(/'/g,"\\'")}','${p.type.replace(/'/g,"\\'")}','Accepted')">Accept</button><button class="btn s" style="background:#fef3f2;color:#b42318;border-color:#fecdca" onclick="decidePostpone('${p.code}','${p.year}','${p.type.replace(/'/g,"\\'")}','Rejected')">Reject</button></td></tr>`).join('')+`</tbody></table></div>`:'<div class="small" style="text-align:center;padding:20px;color:var(--muted)">No pending requests</div>'}</div></div>`;
+      container.innerHTML = html;
+    });
+}
+
+function decidePostpone(code, year, type, status){
+  if(!confirm(status+' postponement for '+code+'?')) return;
+  setStatus('Updating...', true);
+  
+  callBackend('updatePostponementStatus', {
+    payload: {code:code, year:year, type:type, status:status},
+    adminCode: state.adminCode
+  })
+  .then(function(){ setStatus('Request '+status.toLowerCase()+'. Email sent.', true); loadPostponements(); })
+  .catch(e=>setStatus(e.message,false));
+}
+
+function showStage(n){ document.querySelectorAll('.stage-view').forEach(d=>d.style.display='none'); document.getElementById('stage-'+n).style.display='block'; }
+function filterView(t){ document.querySelectorAll('.stage-view tr[data-type]').forEach(tr=>{ tr.style.display = (t==='both'||tr.dataset.type===t)?'':'none'; }); }
+
+function exportListToExcel(id,title){
+  const el=document.getElementById(id); if(!el) return;
+  const year = window.__ACADEMIC_YEAR || '';
+  const niceTitle = title.replace(/_/g,' ');
+  const html=`<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta charset=\"UTF-8\"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>${niceTitle}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><style>
+    body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:28px;background:#fff;color:#101828}
+  .header{border-bottom:4px solid #155eef;padding-bottom:14px;margin-bottom:18px}
+  .uni{font-size:24px;font-weight:900;color:#0f3fb3;margin:0;letter-spacing:-.3px}
+  .dept{font-size:14px;color:#475467;margin:5px 0 0;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .meta{display:flex;gap:28px;margin-top:12px;font-size:12.5px;color:#344054;flex-wrap:wrap}
+  .meta span{background:#f2f4f7;padding:6px 10px;border-radius:6px;border:1px solid #e4e7ec}
+  .meta b{color:#101828;margin-right:4px}
+  .title{margin:22px 0 14px;font-size:19px;font-weight:800;color:#155eef}
+    table{border-collapse:collapse;width:100%;font-size:12.5px}
+    th{background:#155eef;color:#fff;padding:11px 9px;text-align:left;border:1px solid #0f3fb3;font-weight:700}
+    td{padding:9px 8px;border:1px solid #d0d5dd;vertical-align:top}
+    tr.overloaded td{color:#b42318!important;font-weight:700;background:none!important}
+    tr:nth-child(even):not(.overloaded) td{background:#f9fafb}
+  .footer{margin-top:26px;font-size:11px;color:#667085;border-top:1px solid #eaecf0;padding-top:10px}
+
+    /* Mobile optimizations */
+    @media (max-width:768px){
+      .wrap{padding:10px}
+      .g4{grid-template-columns:repeat(2,1fr)!important}
+      .g3{grid-template-columns:1fr!important}
+      .g2{grid-template-columns:1fr!important}
+      .search-hero{padding:20px}
+      .search-input-wrap input{font-size:16px; padding:16px}
+      .metric .v{font-size:28px}
+      .tabs{padding:8px; gap:6px}
+      .tab{padding:8px 12px; font-size:13px}
+      table{font-size:13px}
+      th,td{padding:10px 8px}
+      .modal-card{padding:16px; border-radius:16px}
+      .semester-head{flex-direction:column; align-items:flex-start; gap:8px}
+    }
+    /* Improve phone touch targets */
+    .btn{min-height:44px; touch-action:manipulation}
+    input,select,textarea{min-height:44px}
+
+  </style></head><body>
+  <div class=\"header\">
+    <p class=\"uni\">University of Raparin</p>
+    <p class=\"dept\">College of Basic Education — English Language Department</p>
+    <div class=\"meta\">
+      <span><b>List:</b> ${niceTitle}</span>
+      <span><b>Academic Year:</b> ${year}</span>
+      <span><b>Generated:</b> ${new Date().toLocaleString()}</span>
+    </div>
+  </div>
+  <div class=\"title\">${niceTitle}</div>
+  ${el.outerHTML}
+  <div class=\"footer\">Official Reporting Lists – Administrative Panel</div>
+  </body></html>`;
+  const blob=new Blob([html],{type:'application/vnd.ms-excel'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=title+'.xls'; a.click();
+}
+function exportListToWord(id,title){
+  const el=document.getElementById(id); if(!el) return;
+  const year = window.__ACADEMIC_YEAR || '';
+  const niceTitle = title.replace(/_/g,' ');
+  const html=`<html><head><meta charset=\"UTF-8\"><style>
+    @page{margin:1in}
+    body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;color:#101828}
+  .header{border-bottom:3px solid #155eef;padding-bottom:12px;margin-bottom:18px}
+  .uni{font-size:22pt;font-weight:900;color:#0f3fb3;margin:0}
+  .dept{font-size:11pt;color:#475467;margin:4pt 0 0;font-weight:600;text-transform:uppercase}
+  .meta{margin-top:10pt;font-size:10pt;color:#344054}
+  .meta span{display:inline-block;background:#f2f4f7;padding:4pt 8pt;margin-right:8pt;border:1px solid #e4e7ec;border-radius:4pt}
+  .meta b{color:#000}
+  .title{margin:16pt 0 10pt;font-size:14pt;font-weight:800;color:#155eef}
+    table{border-collapse:collapse;width:100%;font-size:10.5pt}
+    th{background:#155eef;color:#fff;padding:8pt 6pt;text-align:left;border:1pt solid #0f3fb3}
+    td{padding:7pt 6pt;border:1pt solid #d0d5dd}
+    tr.overloaded td{color:#b42318!important;font-weight:700;background:none!important}
+
+    /* Mobile optimizations */
+    @media (max-width:768px){
+      .wrap{padding:10px}
+      .g4{grid-template-columns:repeat(2,1fr)!important}
+      .g3{grid-template-columns:1fr!important}
+      .g2{grid-template-columns:1fr!important}
+      .search-hero{padding:20px}
+      .search-input-wrap input{font-size:16px; padding:16px}
+      .metric .v{font-size:28px}
+      .tabs{padding:8px; gap:6px}
+      .tab{padding:8px 12px; font-size:13px}
+      table{font-size:13px}
+      th,td{padding:10px 8px}
+      .modal-card{padding:16px; border-radius:16px}
+      .semester-head{flex-direction:column; align-items:flex-start; gap:8px}
+    }
+    /* Improve phone touch targets */
+    .btn{min-height:44px; touch-action:manipulation}
+    input,select,textarea{min-height:44px}
+
+  </style></head><body>
+  <div class=\"header\">
+    <p class=\"uni\">University of Raparin</p>
+    <p class=\"dept\">College of Basic Education — English Language Department</p>
+    <div class=\"meta\">
+      <span><b>List:</b> ${niceTitle}</span>
+      <span><b>Academic Year:</b> ${year}</span>
+      <span><b>Date:</b> ${new Date().toLocaleDateString()}</span>
+    </div>
+  </div>
+  <div class=\"title\">${niceTitle}</div>
+  ${el.outerHTML}
+  </body></html>`;
+  const blob=new Blob([html],{type:'application/msword'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=title.replace(/[^a-z0-9]/gi,'_')+'.doc'; a.click();
+}
+
+    function tableFrom(arr, keys){
+      if (!arr || !arr.length) return '<div class="small" style="padding:16px; background:#f9faff; border-radius:12px;">No active records in this list block.</div>';
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead><tr>${keys.map(k => `<th>${escapeHtml(k)}</th>`).join('')}</tr></thead>
+            <tbody>
+              ${arr.map(r => `<tr>${keys.map(k => `<td>${escapeHtml(r[k] == null ? '' : r[k])}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function renderAnnouncements(a){
+      id('tab-ann').innerHTML = `
+        <div class="card">
+          <div class="row" style="justify-content:space-between; margin-bottom:16px;">
+            <h3 style="margin:0; font-size:18px; font-weight:800;">Announcements Disseminator</h3>
+            <button class="btn p" onclick="newAnnouncement()">+ Issue Broadcast</button>
+          </div>
+          <div class="grid g2">
+          ${(a || []).map(x => `
+            <div class="card" style="box-shadow:none; border:1px solid #e4e7ec; background:#fbfdff; position:relative;">
+              <button class="btn s" style="position:absolute;top:8px;right:8px;color:var(--bad);border-color:#fecdca;background:#fef3f2;padding:4px 10px;font-size:12px" onclick="deleteAnn(${x.row})">Delete</button>
+              <b style="color:var(--brand2); font-size:15px; display:block; margin-bottom:6px; padding-right:60px;">${escapeHtml(x.key || '')}</b>
+              <div class="small" style="margin-bottom:8px;">${escapeHtml(x.note || '')}</div>
+              <div style="padding:10px; background:#fff; border-radius:8px; border:1px solid #edf2f7; font-size:14px;">${escapeHtml(x.value || '')}</div>
+            </div>
+          `).join('')}
+          </div>
+        </div>`;
+    }
+    function deleteAnn(row){
+      if(!confirm('Delete this announcement?')) return;
+      setStatus('Deleting...', true);
+      
+      callBackend('deleteAnnouncement', { row: row, adminCode: state.adminCode })
+        .then(function(){ setStatus('Deleted.', true); bootstrap(); })
+        .catch(function(e){ setStatus(e.message||'Delete failed', false); });
+    }
+
+    function renderBackup(){
+      id('tab-docs').innerHTML = `
+        <div class="grid g2">
+          <div class="card">
+            <h3 style="margin:0 0 12px;font-size:18px;font-weight:800">System Backup</h3>
+            <div class="grid">
+              <div>
+                <label class="small" style="font-weight:700">Google Drive Folder ID</label>
+                <input id="bkFolder" placeholder="e.g. 1AbC...">
+              </div>
+              <div>
+                <label class="small" style="font-weight:700">Recipient Email</label>
+                <input id="bkEmail" type="email" placeholder="backup@domain.com">
+              </div>
+              <div>
+                <label class="small" style="font-weight:700">Backup Frequency</label>
+                <select id="bkFreq" onchange="toggleBkDays()">
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="custom">Every X days</option>
+                </select>
+              </div>
+              <div id="bkDaysWrap" style="display:none">
+                <label class="small" style="font-weight:700">Days Interval</label>
+                <input id="bkDays" type="number" min="1" value="7">
+              </div>
+            </div>
+            <div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap">
+              <button class="btn p" onclick="saveBkConfig()">Save Config</button>
+              <button class="btn s" onclick="runBackupNow()">Run Backup Now</button>
+              <button class="btn s" style="background:#067647;color:#fff;border-color:#067647" onclick="listBackups()">Backup Done</button>
+            </div>
+            <div id="bkStatus" class="small" style="margin-top:10px;color:var(--muted)"></div>
+            <div id="bkList" style="margin-top:12px"></div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin:0 0 12px;font-size:18px;font-weight:800">Send Email Announcement</h3>
+            <div class="grid">
+              <div>
+                <label class="small" style="font-weight:700">to whome</label>
+                <select id="emTo">
+                  <option>All</option>
+                  <option>Stage 1</option>
+                  <option>Stage 2</option>
+                  <option>Stage 3</option>
+                  <option>Stage 4</option>
+                  <option>Teachers</option>
+                </select>
+              </div>
+              <div>
+                <label class="small" style="font-weight:700">Subject</label>
+                <input id="emSubj" placeholder="Announcement subject">
+              </div>
+              <div style="grid-column:1/-1">
+                <label class="small" style="font-weight:700">Message</label>
+                <textarea id="emBody" placeholder="Type email body..."></textarea>
+              </div>
+              <div style="grid-column:1/-1">
+                <label class="small" style="font-weight:700">Attach file (optional)</label>
+                <input id="emFile" type="file">
+              </div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:12px">
+              <button class="btn p" onclick="sendEmailAnn()">Send Email</button>
+            </div>
+            <div id="emStatus" class="small" style="margin-top:8px;color:var(--muted)"></div>
+          </div>
+        </div>`;
+      // load config
+      callBackend('getBackupConfig')
+        .then(function(cfg){
+          if(cfg){ id('bkFolder').value=cfg.folderId||''; id('bkEmail').value=cfg.email||''; id('bkFreq').value=cfg.freq||'weekly'; if(cfg.days) id('bkDays').value=cfg.days; toggleBkDays(); }
+        });
+    }
+    function toggleBkDays(){ id('bkDaysWrap').style.display = id('bkFreq').value==='custom' ? 'block':'none'; }
+    function saveBkConfig(){
+      const cfg={folderId:id('bkFolder').value.trim(), email:id('bkEmail').value.trim(), freq:id('bkFreq').value, days:parseInt(id('bkDays').value||'7')};
+      id('bkStatus').textContent='Saving...';
+      
+      callBackend('saveBackupConfig', { cfg: cfg, adminCode: state.adminCode })
+        .then(()=>{id('bkStatus').textContent='Configuration saved. Automated backup scheduled.'})
+        .catch(e=>{id('bkStatus').textContent=e.message});
+    }
+    function runBackupNow(){
+      id('bkStatus').textContent='Creating backup...';
+      callBackend('runBackupNow', { adminCode: state.adminCode })
+        .then(r=>{id('bkStatus').textContent='Backup created: '+r.fileName; listBackups();})
+        .catch(e=>{id('bkStatus').textContent=e.message});
+    }
+    function listBackups(){
+      id('bkList').innerHTML='<div class="small">Loading...</div>';
+      callBackend('listBackups', { adminCode: state.adminCode })
+        .then(list=>{
+          if(!list.length){ id('bkList').innerHTML='<div class="small">No backups found.</div>'; return; }
+          id('bkList').innerHTML='<div class="table-wrap"><table><thead><tr><th>Date</th><th>File Name</th><th>Link</th></tr></thead><tbody>'+
+            list.map(f=>`<tr><td>${f.date}</td><td>${escapeHtml(f.name)}</td><td><a href="${f.url}" target="_blank">Open</a></td></tr>`).join('')+
+            '</tbody></table></div><div class="small" style="margin-top:6px;color:var(--ok)">Backup data is ready to be sent.</div>';
+        });
+    }
+    function sendEmailAnn(){
+      const to=id('emTo').value, subj=id('emSubj').value, body=id('emBody').value;
+      const file=id('emFile').files[0];
+      id('emStatus').textContent='Sending...';
+      if(file){
+        const reader=new FileReader();
+        reader.onload=function(e){
+          const data=e.target.result.split(',')[1];
+          callBackend('sendEmailAnnouncement', { 
+              payload: {toWhome:to, subject:subj, body:body, fileName:file.name, mimeType:file.type, data:data}, 
+              adminCode: state.adminCode 
+            })
+            .then(()=>{id('emStatus').textContent='Email sent to '+to;})
+            .catch(err=>{id('emStatus').textContent=err.message});
+        };
+        reader.readAsDataURL(file);
+      } else {
+        callBackend('sendEmailAnnouncement', { 
+            payload: {toWhome:to, subject:subj, body:body}, 
+            adminCode: state.adminCode 
+          })
+          .then(()=>{id('emStatus').textContent='Email sent to '+to;})
+          .catch(err=>{id('emStatus').textContent=err.message});
+      }
+    }
+
+    // --- NEW UI CONTROLLER FUNCTIONS ---
+
+    function switchStgTab(stg, btn) {
+       // Remove active state from all sub-tabs
+       document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('a'));
+       // Add active state to clicked tab
+       btn.classList.add('a');
+       // Hide all student tables
+       document.querySelectorAll('.stg-view').forEach(v => v.classList.add('hidden'));
+       // Show the selected student table
+       document.getElementById('stg-' + stg).classList.remove('hidden');
+    }
+
+    function editTeacher(code) { 
+       alert('System routing to Teacher Profile editor for UID: ' + code); 
+    }
+
+    function deleteTeacher(code) { 
+       if(confirm('SECURITY WARNING:\n\nAre you sure you want to permanently delete this teacher from the registry? This action cannot be easily undone.')) {
+          alert('Teacher deletion API triggered for UID: ' + code + '\n(Backend link pending)');
+       }
+    }
+
+    function stageToYearInt(stg) {
+      const s = String(stg || '').trim();
+      if (s.includes('یەکەم') || s.includes('1')) return 1;
+      if (s.includes('دووەم') || s.includes('2')) return 2;
+      if (s.includes('سێیەم') || s.includes('3')) return 3;
+      if (s.includes('چوارەم') || s.includes('4')) return 4;
+      return parseInt(s, 10) || 1;
+    }
+
+    function openProfile(code){
+      id('profileModal').classList.add('s');
+      id('pmTitle').innerHTML = `Loading student data...`;
+      id('pmBody').innerHTML = `<div style="padding:40px; text-align:center; color:var(--muted);">Fetching secured institutional records...</div>`;
+      
+      callBackend('getStudentProfile', { code: code, adminCode: state.adminCode })
+        .then(function(p){
+          state.profile = p;
+          const stageYear = stageToYearInt(p.student.stage);
+          
+          if (p.academic && p.academic.semesters && p.academic.semesters.length > 0 && p.academic.semesters[0].subjects) {
+             p.academic.semesters.forEach(sem => {
+                const y = parseInt(sem.year) || 1;
+                (sem.subjects || []).forEach(sub => {
+                   if (y < stageYear && sub.status === 'upcoming' && (!sub.failures || sub.failures.length === 0)) {
+                      sub.status = 'pass';
+                   }
+                });
+             });
+          } else {
+             const studentRecords = (state.init && state.init.lists && state.init.lists.combined ? state.init.lists.combined : [])
+               .filter(r => String(r.studentCode || '').trim() === String(code).trim());
+               
+             const syllabus = (state.init && state.init.syllabus ? state.init.syllabus : []);
+             const semMap = {};
+             
+             syllabus.forEach(mod => {
+               const y = parseInt(mod.year) || 1;
+               const s = mod.semester || '1';
+               const key = `Year ${y} / Semester ${s}`;
+               if (!semMap[key]) semMap[key] = { year: y, semester: s, subjects: [] };
+               
+               const records = studentRecords.filter(r => String(r.moduleCode || '').trim() === String(mod.moduleCode || '').trim());
+               let status = 'upcoming'; let failDetails = [];
+               
+               if (records.length > 0) {
+                 const hasPass = records.some(r => parseFloat(r.preFinal) >= 50 || String(r.status).toLowerCase() === 'pass');
+                 const hasPostpone = records.some(r => String(r.attempt1 || '').toLowerCase().includes('postpone') || String(r.attempt2 || '').toLowerCase().includes('postpone'));
+                 
+                 if (hasPass) { status = 'pass'; } 
+                 else if (hasPostpone) { status = 'postponed'; } 
+                 else { status = 'fail'; failDetails = records; }
+               } else {
+                 if (y < stageYear) status = 'pass';
+               }
+               
+               semMap[key].subjects.push({
+                 moduleCode: mod.moduleCode, subject: mod.name, status: status,
+                 failures: failDetails, activeAttempts: records.length, year: y, semester: s
+               });
+             });
+             p.academic = { semesters: Object.values(semMap).sort((a, b) => (String(a.year) + String(a.semester)).localeCompare(String(b.year) + String(b.semester))) };
+          }
+
+          id('pmTitle').innerHTML = `${escapeHtml(p.student.nameKurdish)} <span style="color:var(--muted); font-size:16px; margin-left:12px; font-weight:600;">#${escapeHtml(p.student.uniqueCode)}</span>`;
+          id('pmBody').innerHTML = profileHtml(p);
+        })
+        .catch(function(e){
+          setStatus(e && e.message ? e.message : 'Institutional profile load failed.', false);
+          closeModal();
+        });
+    }
+
+    function profileHtml(p){
+      const s = p.student;
+      const lim = p.limit || {};
+      const acad = p.academic || { semesters: [] };
+      const semesters = acad.semesters || [];
+
+      let pass = 0, fail = 0, postponed = 0, upcoming = 0;
+      semesters.forEach(sem => {
+        (sem.subjects || []).forEach(sub => {
+          if (sub.status === 'pass') pass++;
+          else if (sub.status === 'fail' || sub.status === 'reach_limit' || sub.status === 'reach > 4 attempt') fail++;
+          else if (sub.status === 'postponed') postponed++;
+          else upcoming++;
+        });
+      });
+
+      return `
+        <div class="card" style="box-shadow:0 8px 24px rgba(16,24,40,0.06); border:2px solid #e4e7ec; background:linear-gradient(180deg, #fff 0%, #fbfdff 100%); margin-bottom:24px; padding:24px; border-radius:20px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:2px solid #f2f4f7;">
+            <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #155eef, #0f3fb3); display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px;">👤</div>
+            <div>
+              <h3 style="margin:0; font-size:20px; font-weight:900; color:var(--ink); letter-spacing:-0.3px;">Primary Demographic Information</h3>
+              <div style="font-size:13px; color:var(--muted); margin-top:2px; font-weight:600;">Student Record • ${escapeHtml(s.uniqueCode)}</div>
+            </div>
+          </div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:18px;">
+            ${field('Kurdish Name', s.nameKurdish)}
+            ${field('English Name', s.nameEnglish)}
+            ${field('Email', s.email)}
+            ${field('Phone', s.phone)}
+            ${field('Guardian Phone', s.parentPhone)}
+            ${field('Gender', s.gender)}
+            ${field('Date of Birth', s.dob || '-')}
+            ${field('Blood Type', s.blood || '-')}
+            ${field('Group', s.group)}
+            ${field('Current Stage', s.stage)}
+            ${field('Study Type', s.studyType)}
+            ${field('Admission Year', s.admissionYear)}
+            ${field('Status', s.status)}
+            ${field('Years Used', (lim.yearsUsed || '0') + ' / 8')}
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top:20px; padding:0; overflow:hidden; border:2px solid #e4e7ec; border-radius:20px;">
+          <div style="padding:20px 24px; background:linear-gradient(90deg, #f8fafc, #fff); border-bottom:2px solid #f2f4f7;">
+            <h3 style="margin:0; font-size:18px; font-weight:900; color:var(--ink);">Academic Progression</h3>
+          </div>
+          
+          <div style="padding:20px 24px; background:#fbfdff;">
+            <div class="grid g4" style="gap:12px;">
+              <div style="text-align:center; padding:16px; background:#ecfdf3; border:2px solid #abefc6; border-radius:14px;"><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#067647; font-weight:800; margin-bottom:6px;">Passed</div><div style="font-size:28px; font-weight:900; color:#067647;">${pass}</div></div>
+              <div style="text-align:center; padding:16px; background:#fef3f2; border:2px solid #fecdca; border-radius:14px;"><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#b42318; font-weight:800; margin-bottom:6px;">Failed</div><div style="font-size:28px; font-weight:900; color:#b42318;">${fail}</div></div>
+              <div style="text-align:center; padding:16px; background:#fff7ed; border:2px solid #fed7aa; border-radius:14px;"><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#b54708; font-weight:800; margin-bottom:6px;">Postponed</div><div style="font-size:28px; font-weight:900; color:#b54708;">${postponed}</div></div>
+              <div style="text-align:center; padding:16px; background:#eef4ff; border:2px solid #c7d7fe; border-radius:14px;"><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#175cd3; font-weight:800; margin-bottom:6px;">Upcoming</div><div style="font-size:28px; font-weight:900; color:#175cd3;">${upcoming}</div></div>
+            </div>
+          </div>
+
+          ${semesters.map(sem => {
+            const subs = sem.subjects || [];
+            const allPass = subs.length > 0 && subs.every(sub => sub.status === 'pass');
+            const hasFail = subs.some(sub => sub.status === 'fail' || sub.status === 'reach_limit' || sub.status === 'reach > 4 attempt');
+            const yearLabel = sem.year ? `Year ${sem.year}` : '';
+            const statusColor = allPass ? '#067647' : hasFail ? '#b42318' : '#175cd3';
+            const bgColor = allPass ? '#ecfdf3' : hasFail ? '#fef3f2' : '#eef4ff';
+            const borderColor = allPass ? '#abefc6' : hasFail ? '#fecdca' : '#c7d7fe';
+            
+            return `
+            <div style="margin:0 24px 20px; background:#fff; border:2px solid ${borderColor}; border-radius:16px; overflow:hidden; box-shadow:0 4px 12px rgba(16,24,40,0.04);">
+              <div style="background:${bgColor}; padding:14px 18px; border-bottom:2px solid ${borderColor}; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div style="font-weight:900; font-size:15px; color:${statusColor}; display:flex; align-items:center; gap:8px;">
+                    ${allPass ? '✓' : hasFail ? '✗' : '•'} ${escapeHtml(sem.semLabel || (yearLabel + ' / Semester ' + (sem.semester || '')))}
+                  </div>
+                  ${allPass ? `<div style="font-size:12px; color:${statusColor}; font-weight:700; margin-top:2px;">${yearLabel} Passed</div>` : ''}
+                </div>
+                <div style="display:flex; gap:6px;">
+                  ${allPass ? '<span style="background:#067647; color:#fff; padding:4px 10px; border-radius:8px; font-size:11px; font-weight:800; text-transform:uppercase;">Completed</span>' : ''}
+                  ${hasFail ? '<span style="background:#b42318; color:#fff; padding:4px 10px; border-radius:8px; font-size:11px; font-weight:800; text-transform:uppercase;">Has Failures</span>' : ''}
+                </div>
+              </div>
+              <div style="overflow-x:auto;">
+                <table style="width:100%; margin:0; border-collapse:collapse;">
+                  <thead>
+                    <tr style="background:#f8fafc;">
+                      <th style="padding:12px 16px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); font-weight:800; border-bottom:1px solid #e4e7ec; width:110px;">Mod Code</th>
+                      <th style="padding:12px 16px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); font-weight:800; border-bottom:1px solid #e4e7ec;">Curriculum Target</th>
+                      <th style="padding:12px 16px; text-align:center; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); font-weight:800; border-bottom:1px solid #e4e7ec; width:120px;">Status</th>
+                      <th style="padding:12px 16px; text-align:center; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); font-weight:800; border-bottom:1px solid #e4e7ec; width:90px;">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${subs.map(sub => subjectRow(s.uniqueCode, sub, lim)).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function field(k,v){ return `<div style="background:#f8fafc; padding:12px 14px; border-radius:12px; border:1px solid #e4e7ec;"><div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); margin-bottom:4px;">${escapeHtml(k)}</div><div style="font-size:15px; color:#101828; font-weight:600;">${escapeHtml(v == null || v === '' ? '-' : v)}</div></div>`; }
+    
+    function docsHtml(items){
+      if (!items || !items.length) return '<div class="small" style="padding:16px; background:#f9faff; border-radius:12px; text-align:center;">No valid records mounted to this profile hub.</div>';
+      return items.map(x => `<div class="card" style="box-shadow:none; margin-bottom:8px; border:1px solid #edf2f7;"><a href="${escapeHtml(x.url || '#')}" target="_blank" style="color:var(--brand2); font-weight:700; text-decoration:none;">${escapeHtml(x.title || 'Attached Document')}</a><div class="small" style="margin-top:6px;">${escapeHtml(x.note || '')}</div></div>`).join('');
+    }
+
+    function subjectRow(code, sub, lim){
+      var isFail = sub.status === 'fail' || sub.status === 'reach_limit' || sub.status === 'reach > 4 attempt';
+      var showDetail = isFail;
+      var rowBg = isFail ? '#fef3f2' : sub.status === 'pass' ? '#f6fef9' : '#fff';
+      var rowBorder = isFail ? '2px solid #fecdca' : '1px solid #f2f4f7';
+
+      var detailBtn = showDetail
+        ? `<button class="btn s" style="padding:6px 12px;font-size:12px; background:#b42318; color:#fff; border:none; border-radius:8px; font-weight:700;" onclick='editSubject(${JSON.stringify(code)}, ${JSON.stringify(sub)})'>Details</button>`
+        : '<span style="color:var(--muted); font-size:12px;">—</span>';
+
+      return `<tr style="background:${rowBg}; border-left:${isFail ? '4px solid #b42318' : 'none'};">
+        <td style="padding:14px 16px; font-family:monospace; font-weight:800; color:var(--muted); font-size:13px; border-bottom:${rowBorder};">${escapeHtml(sub.moduleCode || '')}</td>
+        <td style="padding:14px 16px; font-weight:700; color:var(--ink); font-size:14px; border-bottom:${rowBorder};">${escapeHtml(sub.subject || '')}</td>
+        <td style="padding:14px 16px; text-align:center; border-bottom:${rowBorder};">${badge(sub.status)}</td>
+        <td style="padding:14px 16px; text-align:center; border-bottom:${rowBorder};">${detailBtn}</td>
+      </tr>`;
+    }
+
+    function badge(s){
+      if (s === 'pass')        return '<span class="badge b-ok">Pass / Clr</span>';
+      if (s === 'reach_limit' || s === 'reach > 4 attempt') return '<span class="badge b-bad">⚠ Limit Reached</span>';
+      if (s === 'fail')        return '<span class="badge b-bad">Failed</span>';
+      if (s === 'postponed')   return '<span class="badge b-warn">Postponed</span>';
+      return '<span class="badge b-info">Upcoming</span>';
+    }
+
+    function closeModal(){ id('profileModal').classList.remove('s'); }
+    function closeSubjectModal(){ id('subjectModal').classList.remove('s'); }
+    function closeBroadcast(){ id('broadcastModal').classList.remove('s'); }
+
+    function newStudent(){ alert('Implement external form flow mapping. Framework function upsertStudent active.'); }
+    function newTeacher(){ alert('Backend logic mapped. Standby for teacher payload.'); }
+    function newSubject(){ alert('Syllabus modifier API verified on active host.'); }
+    function newAnnouncement(){ 
+      id('bcText').value = '';
+      id('bcTo').value = 'All';
+      id('bcStart').valueAsDate = new Date();
+      id('bcEnd').value = '';
+      id('bcStatus').textContent = '';
+      id('broadcastModal').classList.add('s');
+    }
+    function submitBroadcast(){
+      const payload = {
+        text: id('bcText').value.trim(),
+        toWhome: id('bcTo').value,
+        timeStart: id('bcStart').value,
+        timeEnd: id('bcEnd').value
+      };
+      if(!payload.text){ id('bcStatus').textContent = 'Please enter announcement text.'; return; }
+      id('bcStatus').textContent = 'Sending...';
+      
+      callBackend('saveAnnouncement', { payload: payload, adminCode: state.adminCode })
+        .then(function(){
+          id('bcStatus').textContent = 'Stored successfully in Announcements sheet.';
+          setTimeout(function(){ closeBroadcast(); bootstrap(); }, 800);
+        })
+        .catch(function(e){
+          id('bcStatus').textContent = e && e.message ? e.message : 'Failed to store.';
+        });
+    }
+    function editSubject(code, sub){
+      var maxFree = 4, maxInvoice = 8;
+      var maxAttempts = sub.invoiceNumber ? maxInvoice : maxFree;
+      var remaining   = Math.max(0, maxAttempts - (sub.attempts || 0));
+
+      var yearsHtml = '';
+      if (sub.failures && sub.failures.length > 0) {
+        yearsHtml = '<div style="margin-top:16px;"><div style="font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Academic Years Attempted</div>' +
+          sub.failures.map(function(f){
+            return '<div style="padding:10px 14px;background:#fef3f2;border:1px solid #fecdca;border-radius:10px;font-size:13px;margin-bottom:6px;">' +
+              '<b style="color:#912018;">' + escapeHtml(f.academicYear) + '</b>' +
+              ' &nbsp;·&nbsp; Year Logged Status: <b>' + escapeHtml(f.attempt1) + '</b>' +
+              '</div>';
+          }).join('') + '</div>';
+      }
+
+      var alertHtml;
+      if ((sub.status === 'reach_limit' || sub.status === 'reach > 4 attempt') && !sub.invoiceNumber) {
+        alertHtml = '<div style="padding:12px 16px;background:#fef3f2;border:1px solid #fecdca;border-radius:12px;color:#b42318;font-weight:700;margin-top:14px;">⚠ Reached 4-attempt limit. Student must submit an Invoice ID to unlock 4 more attempts. Pre-Final is now forced to 0.</div>';
+      } else if (sub.invoiceNumber) {
+        alertHtml = '<div style="padding:12px 16px;background:#ecfdf3;border:1px solid #abefc6;border-radius:12px;color:#067647;font-weight:700;margin-top:14px;">✔ Invoice <b>' + escapeHtml(sub.invoiceNumber) + '</b> registered. Pre-Final forced to 0. ' + remaining + ' attempt(s) remaining out of 4 new invoice slots.</div>';
+      } else {
+        alertHtml = '<div style="padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;color:#b54708;font-weight:700;margin-top:14px;">⚠ Failed. ' + (sub.attempts || 0) + ' of 4 free attempts used. ' + remaining + ' free attempt(s) remaining.</div>';
+      }
+
+      id('subjectModalTitle').textContent = sub.subject || 'Subject Details';
+      id('subjectModalBody').innerHTML =
+        '<div class="grid g2" style="gap:16px;">' +
+          field('Module Code',    sub.moduleCode) +
+          field('Subject Name',   sub.subject) +
+          field('Pre-Final Grade', sub.preFinal) +
+          field('Attempts Used',  (sub.attempts || 0) + ' / ' + maxAttempts) +
+          field('Invoice Number', sub.invoiceNumber || 'None') +
+          field('Current Status', sub.status || '-') +
+        '</div>' + alertHtml + yearsHtml;
+
+      id('subjectModal').classList.add('s');
+    }
+
+    function togglePostpone(code, moduleCode, active){
+      callBackend('togglePostponement', { code: code, moduleCode: moduleCode, active: active === 1, adminCode: state.adminCode })
+        .then(function(){
+          setStatus('Postponement updated successfully.', true);
+          openProfile(code);  // refresh the profile so the badge updates immediately
+        })
+        .catch(function(e){ setStatus(e && e.message ? e.message : 'Postponement failed.', false); });
+    }
+
+    function grantOverride(code){
+      callBackend('grantEctsOverride', { code: code, adminCode: state.adminCode })
+        .then(function(){ setStatus('Academic ECTS limitation explicitly bypassed.', true); })
+        .catch(function(e){ setStatus(e && e.message ? e.message : 'Failure logic returned.', false); });
+    }
+
+    function markCompleted(code){
+      callBackend('markFullyCompleted', { code: code, adminCode: state.adminCode })
+        .then(function(){ setStatus('Matrix validation degree clearance completed.', true); })
+        .catch(function(e){ setStatus(e && e.message ? e.message : 'Failed core operation check.', false); });
+    }
+
+    function archiveStudent(code){
+      callBackend('archiveStudent', { code: code, adminCode: state.adminCode })
+        .then(function(){ setStatus('Archive flag registered and database detached.', true); })
+        .catch(function(e){ setStatus(e && e.message ? e.message : 'System rejected operation.', false); });
+    }
+
+    function runRollover(){
+      if (!confirm('This commits a severe irreversible institutional state change. Continue?')) return;
+      callBackend('runYearRollover', { adminCode: state.adminCode })
+        .then(function(r){ setStatus('Year promotion rollover locked: ' + r.from + ' ➟ ' + r.to, true); })
+        .catch(function(e){ setStatus(e && e.message ? e.message : 'Network execution rollover failed.', false); });
+    }
+
+    function escapeHtml(s){
+      return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function escapeJs(s){
+      return String(s == null ? '' : s).replace(/\\/g,'\\\\').replace(/'/g,'\\\'');
+    }
+
+    // Modern Tab Switching Protocol
+    document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('a'));
+      b.classList.add('a');
+      const t = b.dataset.t;
+      
+      // Because search/filters are placed INSIDE #tab-dash, they automatically
+      // hide perfectly when switching to any other tab section!
+      ['dash','students','teachers','syllabus','lists','ann','docs','roll'].forEach(k => {
+        id('tab-' + k).classList.toggle('hidden', k !== t);
+      });
+    });
+
+    // ===== NEW: Postponement Acceptance =====
+    function acceptPostponement(row){
+      if(!confirm('Accept this postponement request? This will update the student record and failure tracker.')) return;
+      setStatus('Processing postponement...', true);
+      callBackend('acceptPostponement', { row: row, adminCode: state.adminCode })
+        .then(function(){
+          setStatus('Postponement accepted and records updated', true);
+          loadLists();
+        })
+        .catch(function(e){ setStatus(e.message || 'Failed', false); });
+    }
+
+    // ===== NEW: Bulk Promotion Interface =====
+    function openBulkPromote(){
+      const stage = prompt('Enter stage to promote FROM (1, 2, 3, or 4 for graduation):');
+      if(!stage) return;
+      setStatus('Loading students...', true);
+      callBackend('getStudentsForPromotion', { stage: 'Stage ' + stage })
+        .then(function(students){
+          if(!students || !students.length){ alert('No active students found for this stage'); return; }
+          let html = '<div style="max-height:400px; overflow:auto;"><table style="width:100%;"><thead><tr><th style="width:40px;"><input type="checkbox" id="selAll" onchange="toggleAllStudents(this)"></th><th>Name</th><th>Code</th><th>Group</th></tr></thead><tbody>';
+          students.forEach(s => {
+            html += `<tr><td><input type="checkbox" class="stuSel" data-code="${escapeHtml(s.code)}"></td><td>${escapeHtml(s.name)}</td><td style="font-family:monospace;">${escapeHtml(s.code)}</td><td>${escapeHtml(s.group)}</td></tr>`;
+          });
+          html += '</tbody></table></div>';
+          html += `<div style="margin-top:16px; display:flex; gap:12px; justify-content:flex-end;"><button class="btn s" onclick="closeModal()">Cancel</button><button class="btn p" onclick="executeBulkPromote('${stage}')">Promote Selected</button></div>`;
+          id('pmTitle').textContent = `Bulk Promote Stage ${stage} Students`;
+          id('pmBody').innerHTML = html;
+          openModal();
+        })
+        .catch(function(e){ setStatus(e.message || 'Failed', false); });
+    }
+
+    function toggleAllStudents(cb){
+      document.querySelectorAll('.stuSel').forEach(x => x.checked = cb.checked);
+    }
+
+    function executeBulkPromote(fromStage){
+      const codes = Array.from(document.querySelectorAll('.stuSel:checked')).map(x => x.dataset.code);
+      const names = Array.from(document.querySelectorAll('.stuSel:checked')).map(x => x.closest('tr').querySelector('td:nth-child(2)').textContent);
+      if(!codes.length){ alert('Select at least one student'); return; }
+      const toStage = fromStage === '4' ? 'Graduated' : (parseInt(fromStage) + 1).toString();
+      
+      let confirmMsg;
+      if(fromStage === '4'){
+        confirmMsg = `GRADUATE ${codes.length} STUDENTS?
+
+These students will be:
+✓ Status changed to "Graduated"
+✓ Moved to archive area (row 2500+ in Master Directory)
+✓ Removed from active student lists
+
+Students:
+${names.slice(0,5).join(', ')}${names.length>5 ? '\n...and ' + (names.length-5) + ' more' : ''}
+
+This action maintains the first 90 rows for Stage 1 as requested.`;
+      } else {
+        confirmMsg = `PROMOTE ${codes.length} STUDENTS?
+
+From: Stage ${fromStage} → To: Stage ${toStage}
+Students will stay in top section and update their stage.
+
+Students:
+${names.slice(0,5).join(', ')}${names.length>5 ? '\n...and ' + (names.length-5) + ' more' : ''}`;
+      }
+      
+      if(!confirm(confirmMsg)) return;
+      
+      setStatus('Processing bulk promotion...', true);
+      closeModal();
+      callBackend('bulkPromoteStudents', { 
+          codes: codes, 
+          fromStage: 'Stage ' + fromStage, 
+          toStage: fromStage === '4' ? 'Graduated' : 'Stage ' + toStage, 
+          adminCode: state.adminCode 
+        })
+        .then(function(res){
+          setStatus(`Successfully updated ${res.updated} students`, true);
+          loadDashboard();
+        })
+        .catch(function(e){ setStatus(e.message || 'Failed', false); });
+    }
+
+    // ===== NEW: Failures Tracker Editor =====
+    function openFailuresEditor(){
+      setStatus('Loading failures tracker...', true);
+      callBackend('getFailuresTrackerAll')
+        .then(function(data){
+          if(!data || !data.headers){ alert('No data'); return; }
+          let html = '<div style="max-height:500px; overflow:auto; font-size:12px;"><table style="width:100%; border-collapse:collapse;"><thead><tr>';
+          data.headers.forEach(h => { html += `<th style="padding:8px; background:#f8fafc; border:1px solid #e4e7ec; position:sticky; top:0;">${escapeHtml(h)}</th>`; });
+          html += '<th style="padding:8px; background:#f8fafc; border:1px solid #e4e7ec; position:sticky; top:0;">Action</th></tr></thead><tbody>';
+          data.rows.forEach((row, idx) => {
+            html += '<tr>';
+            row.forEach(cell => { html += `<td style="padding:6px; border:1px solid #f2f4f7;">${escapeHtml(String(cell||''))}</td>`; });
+            html += `<td style="padding:6px; border:1px solid #f2f4f7;"><button class="btn s" style="padding:4px 8px; font-size:11px;" onclick="editFailureRow(${idx})">Edit</button></td></tr>`;
+          });
+          html += '</tbody></table></div>';
+          id('pmTitle').textContent = 'Edit Attempt & Failures Tracker';
+          id('pmBody').innerHTML = html;
+          openModal();
+          setStatus('Ready', true);
+        })
+        .catch(function(e){ setStatus(e.message || 'Failed', false); });
+    }
+
+    function editFailureRow(idx){
+      callBackend('getFailuresTrackerAll')
+        .then(function(data){
+          const row = data.rows[idx];
+          const headers = data.headers;
+          let formHtml = '<div class="grid g2" style="gap:12px; max-height:400px; overflow:auto;">';
+          headers.forEach((h, i) => {
+            const val = row[i] || '';
+            formHtml += `<div><label style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--muted);">${escapeHtml(h)}</label><input id="edit_${i}" value="${escapeHtml(String(val))}" style="width:100%; padding:8px; margin-top:4px; border:1px solid #d0d5dd; border-radius:8px;"></div>`;
+          });
+          formHtml += '</div>';
+          formHtml += `<div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;"><button class="btn s" onclick="openFailuresEditor()">Cancel</button><button class="btn p" onclick="saveFailureRow(${idx})">Save Changes</button></div>`;
+          
+          id('pmTitle').textContent = 'Edit Failure Record';
+          id('pmBody').innerHTML = formHtml;
+        })
+        .catch(function(e){ alert('Failed to load'); });
+    }
+
+    function saveFailureRow(idx){
+      callBackend('getFailuresTrackerAll')
+        .then(function(data){
+          const headers = data.headers;
+          const updates = {};
+          headers.forEach((h, i) => {
+            const el = document.getElementById('edit_' + i);
+            if(el) updates[h] = el.value;
+          });
+          
+          callBackend('updateFailureTrackerRow', { idx: idx, updates: updates, adminCode: state.adminCode })
+            .then(function(){
+              alert('Record updated successfully');
+              openFailuresEditor();
+            })
+            .catch(function(e){ alert('Save failed: ' + e.message); });
+        })
+        .catch(function(e){ alert('Failed'); });
+    }
+
+  
+    // Auto-login on Enter
+    document.addEventListener('DOMContentLoaded', function(){
+      const codeInput = document.getElementById('adminCode');
+      if(codeInput){
+        codeInput.addEventListener('keydown', function(e){
+          if(e.key === 'Enter'){ login(); }
+        });
+        codeInput.focus();
+      }
+    });
+
+</script>
+</body>
+</html>
